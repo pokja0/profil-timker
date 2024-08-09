@@ -12,14 +12,14 @@ library(readxl)
 
 ui <- page_sidebar(
   title = "Evaluasi Tim Kerja",
+  autoWaiter(),
   fillable = F,
   sidebar = sidebar(
     width = "20%",
     uiOutput("filter_timker"),
     uiOutput("cari"),
-    p("Data bersumber dari Capaian Output dan Komponen TA.2024 Pada Kolom Rekapitulasi")
+    textOutput("sumber_data")
   ),
-  autoWaiter(),
   tags$div(
     style = "display: flex; align-items: center; justify-content: center;",
     tags$img(src = "https://bkkbnsulbar.id/wp-content/uploads/2022/12/cropped-logobkkbnsulbar.png", height = "100px"),
@@ -121,6 +121,11 @@ server <- function(input, output) {
     )
   })
   
+  output$sumber_data <- renderText({
+    req(input$cari)
+    print("Data bersumber dari Capaian Output dan Komponen TA.2024 Pada Kolom Rekapitulasi")
+  })
+  
   nilai_timker <- eventReactive(input$cari,{
     nilai_timker = input$pilih_timker
   })
@@ -148,7 +153,7 @@ server <- function(input, output) {
             y0 = 50, y1 = 105,  # Koordinat Y untuk persegi panjang
             line = list(color = "green"),  # Warna garis tepi
             fillcolor = "lightblue",  # Warna isi
-            opacity = 0.3  # Transparansi persegi panjang
+            opacity = 0.2  # Transparansi persegi panjang
           ),
           list(
             type = "rect",
@@ -156,7 +161,7 @@ server <- function(input, output) {
             y0 = 0, y1 = 50,
             line = list(color = "red"),
             fillcolor = "pink",
-            opacity = 0.3
+            opacity = 0.2
           )
         )
       )
@@ -164,7 +169,13 @@ server <- function(input, output) {
   
   output$bar_realisasi <- renderPlotly({
     data_rekapitulasi_timker = data_rekapitulasi_timker %>%
-      filter(`KODE TIMKER` %in% nilai_timker())
+      filter(`KODE TIMKER` %in% nilai_timker()) %>%
+      mutate(
+        colors = ifelse(`KODE TIMKER` == 'SULBAR', 'lightblue',
+                ifelse(`KODE TIMKER` != 'SULBAR' & `PERSENTASE REALISASI ANGGARAN` >= 50, '#77dd77',
+                '#d9544d')))
+    
+    
     
     bar_realisasi <- plot_ly(data_rekapitulasi_timker, 
                              x = ~`PERSENTASE REALISASI ANGGARAN`, 
@@ -172,10 +183,25 @@ server <- function(input, output) {
                              type = 'bar', 
                              orientation = 'h',  # Mengatur orientasi menjadi horizontal
                              text = ~round(`PERSENTASE REALISASI ANGGARAN`, 2),  # Menambahkan label teks
-                             textposition = 'auto',  # Posisi teks otomatis
-                             marker = list(color = 'lightblue')) %>%  # Warna bar
-      layout(xaxis = list(title = "%"),
-             yaxis = list(title = ""))
+                             textposition = 'outside',  # Posisi teks otomatis
+                             marker = list(color = ~colors)) %>%  # Warna bar
+      layout(xaxis = list(title = "%", range = c(0, 110)),
+             yaxis = list(title = ""),
+             annotations = list(
+               list(
+                 x = 80,  # Koordinat x dari teks
+                 y = 'SULBAR',  # Koordinat y dari teks (harus sesuai dengan kategori)
+                 text = "Ideal >= 50%",  # Teks yang akan ditampilkan
+                 xref = "x",  # Referensi untuk sumbu x
+                 yref = "y",  # Referensi untuk sumbu y
+                 font = list(
+                   family = "Arial",  # Jenis font
+                   size = 14,  # Ukuran font
+                   color = "black"  # Warna font
+                 ),
+                 showarrow = F
+               )
+             ))
     
     # Tampilkan plot
     bar_realisasi %>%
@@ -185,7 +211,11 @@ server <- function(input, output) {
   
   output$bar_output <- renderPlotly({
     data_rekapitulasi_timker = data_rekapitulasi_timker %>%
-      filter(`KODE TIMKER` %in% nilai_timker())
+      filter(`KODE TIMKER` %in% nilai_timker()) %>%
+      mutate(
+        colors = ifelse(`KODE TIMKER` == 'SULBAR', 'lightblue',
+                        ifelse(`KODE TIMKER` != 'SULBAR' & `PERSENTASE CAPAIAN` >= 50, '#77dd77',
+                               '#d9544d')))
     
     bar_output <- plot_ly(data_rekapitulasi_timker, 
                           x = ~`PERSENTASE CAPAIAN`, 
@@ -193,10 +223,25 @@ server <- function(input, output) {
                           type = 'bar', 
                           orientation = 'h',  # Mengatur orientasi menjadi horizontal
                           text = ~round(`PERSENTASE CAPAIAN`, 2),  # Menambahkan label teks
-                          textposition = 'auto',  # Posisi teks otomatis
-                          marker = list(color = 'lightblue')) %>%  # Warna bar
-      layout(xaxis = list(title = "%"),
-             yaxis = list(title = ""))
+                          textposition = 'outside',  # Posisi teks otomatis
+                          marker = list(color = ~colors)) %>%  # Warna bar
+      layout(xaxis = list(title = "%", range = c(0, 110)),
+             yaxis = list(title = ""),
+             annotations = list(
+               list(
+                 x = 90,  # Koordinat x dari teks
+                 y = 'SULBAR',  # Koordinat y dari teks (harus sesuai dengan kategori)
+                 text = "Ideal >= 50%",  # Teks yang akan ditampilkan
+                 xref = "x",  # Referensi untuk sumbu x
+                 yref = "y",  # Referensi untuk sumbu y
+                 font = list(
+                   family = "Arial",  # Jenis font
+                   size = 14,  # Ukuran font
+                   color = "black"  # Warna font
+                 ),
+                 showarrow = F
+               )
+             ))
     
     # Tampilkan plot
     bar_output %>%
@@ -211,7 +256,10 @@ server <- function(input, output) {
       select(-c("PERMASALAHAN", "TIM KERJA")) %>%
       mutate(`SISA ANGGARAN` = paste0("Rp", comma(`PAGU ANGGARAN` - `REALISASI ANGGARAN`)),
              `PAGU ANGGARAN` = paste0("Rp", comma(`PAGU ANGGARAN`)),
-             `REALISASI ANGGARAN` = paste0("Rp", comma(`REALISASI ANGGARAN`))) %>%
+             `REALISASI ANGGARAN` = paste0("Rp", comma(`REALISASI ANGGARAN`)),
+             `PERSENTASE CAPAIAN` = round(`PERSENTASE CAPAIAN`, 2),
+             `PERSENTASE REALISASI ANGGARAN` = round(`PERSENTASE REALISASI ANGGARAN`, 2)
+             ) %>%
       select(c(`KODE TIMKER`, KODE, URAIAN, `PERSENTASE CAPAIAN`, `PERSENTASE REALISASI ANGGARAN`,
                TARGET, `SATUAN \n TARGET`, CAPAIAN, `SATUAN CAPAIAN`,
                `PAGU ANGGARAN`, `REALISASI ANGGARAN`, `SISA ANGGARAN`)) %>%
@@ -221,12 +269,17 @@ server <- function(input, output) {
       arrange(`PERSENTASE CAPAIAN`)
     
     as.datatable(
-      formattable(tabel_rincian),
+      formattable(tabel_rincian, 
+                  list(
+                    `PERSENTASE CAPAIAN` = color_tile("#d9544d", "lightgreen"),
+                    `SISA ANGGARAN` = color_tile("#d9544d", "lightgreen"),
+                    `PERSENTASE REALISASI ANGGARAN` = color_tile("#d9544d", "lightgreen")
+                  )),
       extensions = 'Buttons',
       filter = 'top',
       options = list(
         dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+        buttons = c('copy', 'excel'),
         pageLength = 13, autoWidth = TRUE
       )
     )
@@ -243,7 +296,7 @@ server <- function(input, output) {
         `JUMLAH KOMPONEN` = length(unique(KODE)),
         TERCAPAI = sum(`PERSENTASE CAPAIAN` >= 100),
         `BELUM TERCAPAI` = `JUMLAH KOMPONEN` - TERCAPAI,
-        `% CAPAIAN` = round(TERCAPAI/`JUMLAH KOMPONEN`, 4) * 100,
+        `% CAPAIAN` = round(TERCAPAI/`JUMLAH KOMPONEN`, 2) * 100,
         `PAGU` = sum(`PAGU ANGGARAN`),
         `REALISASI ANGGARAN` = sum(`REALISASI ANGGARAN`),
         SISA = PAGU - `REALISASI ANGGARAN`,
@@ -272,13 +325,17 @@ server <- function(input, output) {
     data_rekapitulasi_timker1 = data_rekapitulasi_timker1 %>%
       mutate(PAGU = paste0("Rp", comma(PAGU)),
              `REALISASI ANGGARAN` = paste0("Rp", comma(`REALISASI ANGGARAN`)),
-             SISA = paste0(comma("Rp", SISA)))
+             SISA = paste0("Rp", comma(SISA)))
     
-    as.datatable(formattable(data_rekapitulasi_timker1),
+    as.datatable(formattable(data_rekapitulasi_timker1, 
+                             list(
+                               `% CAPAIAN` = color_tile("#d9544d", "lightgreen"),
+                               `% ANGGARAN` = color_tile("#d9544d", "lightgreen")
+                             )),
                  extensions = 'Buttons',
                  options = list(
                    dom = 'Bfrtip',
-                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                   buttons = c('copy', 'excel'),
                    pageLength = 13, autoWidth = TRUE
                  )
               )
