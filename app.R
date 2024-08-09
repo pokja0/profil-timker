@@ -12,7 +12,7 @@ library(readxl)
 
 ui <- page_sidebar(
   title = "Evaluasi Tim Kerja",
-  autoWaiter(),
+  #autoWaiter(),
   fillable = F,
   sidebar = sidebar(
     width = "20%",
@@ -131,40 +131,67 @@ server <- function(input, output) {
   })
   
   output$sp_output_realisasi <- renderPlotly({
-    data_rekapitulasi_timker = data_rekapitulasi_timker %>%
-      filter(`KODE TIMKER` %in% nilai_timker())
-    # Membuat scatter plot dengan label
-    p <- plot_ly(data_rekapitulasi_timker, y = ~`PERSENTASE CAPAIAN`, 
-                 x = ~`PERSENTASE REALISASI ANGGARAN`, type = 'scatter', 
-                 mode = 'markers+text',
-                 marker = list(size = 15),  # Memperbesar ukuran point
-                 textfont = list(size = 10),
-                 text = ~`KODE TIMKER`,  # Menampilkan 5 huruf pertama dari label
-                 textposition = 'top center') %>%
-      layout(title = "PERSENTASE CAPAIAN OUTPUT & REALISASI ANGGARAN",
-             xaxis = list(title = "ANGGARAN"),
-             yaxis = list(title = "OUTPUT"))
-    p %>%
-      layout(
-        shapes = list(
-          list(
-            type = "rect",
-            x0 = 50, x1 = 105,  # Koordinat X untuk persegi panjang
-            y0 = 50, y1 = 105,  # Koordinat Y untuk persegi panjang
-            line = list(color = "green"),  # Warna garis tepi
-            fillcolor = "lightblue",  # Warna isi
-            opacity = 0.2  # Transparansi persegi panjang
-          ),
-          list(
-            type = "rect",
-            x0 = 0, x1 = 50,  # Contoh persegi panjang kedua
-            y0 = 0, y1 = 50,
-            line = list(color = "red"),
-            fillcolor = "pink",
-            opacity = 0.2
+    input$cari # Re-run when button is clicked
+    
+    withProgress(message = 'Making plot', value = 0, {
+      data_rekapitulasi_timker = data_rekapitulasi_timker %>%
+        filter(`KODE TIMKER` %in% nilai_timker())
+      
+      # Increment the progress bar, and update the detail text.
+      incProgress(0.3, detail = paste("Filter Data"))
+      
+      # Membuat scatter plot dengan label
+      p <- plot_ly(data_rekapitulasi_timker, y = ~`PERSENTASE CAPAIAN`, 
+                   x = ~`PERSENTASE REALISASI ANGGARAN`, type = 'scatter', 
+                   mode = 'markers+text',
+                   marker = list(size = 15),  # Memperbesar ukuran point
+                   textfont = list(size = 10),
+                   text = ~`KODE TIMKER`,  # Menampilkan 5 huruf pertama dari label
+                   textposition = 'top center') %>%
+        layout(title = "PERSENTASE CAPAIAN OUTPUT & REALISASI ANGGARAN",
+               xaxis = list(title = "ANGGARAN"),
+               yaxis = list(title = "OUTPUT"))
+      
+      for (i in 4:7) {
+        incProgress(4/7)
+        sum(runif(10000000,0,1))
+      }
+      
+      # Increment the progress bar, and update the detail text.
+      incProgress(0.8, detail = paste("Base Plot"))
+      
+      p = p %>%
+        layout(
+          shapes = list(
+            list(
+              type = "rect",
+              x0 = 50, x1 = 105,  # Koordinat X untuk persegi panjang
+              y0 = 50, y1 = 105,  # Koordinat Y untuk persegi panjang
+              line = list(color = "green"),  # Warna garis tepi
+              fillcolor = "lightblue",  # Warna isi
+              opacity = 0.2  # Transparansi persegi panjang
+            ),
+            list(
+              type = "rect",
+              x0 = 0, x1 = 50,  # Contoh persegi panjang kedua
+              y0 = 0, y1 = 50,
+              line = list(color = "red"),
+              fillcolor = "pink",
+              opacity = 0.2
+            )
           )
         )
-      )
+      
+      incProgress(0.8)
+      
+      incProgress(0.9, detail = paste("Base Plot"))
+      incProgress(1, detail = paste("Selesai"))
+    })
+    
+    p
+    
+
+
   })
   
   output$bar_realisasi <- renderPlotly({
