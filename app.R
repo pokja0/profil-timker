@@ -2,7 +2,8 @@ library(plotly)
 library(shinyWidgets)
 library(bslib)
 library(waiter)
-library(reactable)
+library(DT)
+library(formattable)
 library(gsheet)
 library(dplyr)
 library(scales)
@@ -42,14 +43,14 @@ ui <- page_sidebar(
       plotlyOutput("bar_realisasi")
     )
   ),
-  navset_card_pill(
+  navset_card_pill(height = "700px",
     nav_panel(
       "TABEL REKAP",
-      reactableOutput("tabel_rekap")
+      DT::DTOutput("tabel_rekap")
     ),
     nav_panel(
       "TABEL RINCIAN",
-      reactableOutput("tabel_rincian")
+      DT::DTOutput("tabel_rincian")
     )
   )
 )
@@ -202,65 +203,40 @@ server <- function(input, output) {
       layout(yaxis = list(categoryorder = "total ascending"))
   })
   
-  output$tabel_rincian <- renderReactable({
+  output$tabel_rincian <- DT::renderDataTable({
     data_rekapitulasi = data_rekapitulasi %>%
       filter(`KODE TIMKER` %in% nilai_timker())
-    
+
     tabel_rincian = data_rekapitulasi %>%
       select(-c("PERMASALAHAN", "TIM KERJA")) %>%
       mutate(`SISA ANGGARAN` = paste0("Rp", comma(`PAGU ANGGARAN` - `REALISASI ANGGARAN`)),
              `PAGU ANGGARAN` = paste0("Rp", comma(`PAGU ANGGARAN`)),
              `REALISASI ANGGARAN` = paste0("Rp", comma(`REALISASI ANGGARAN`))) %>%
       select(c(`KODE TIMKER`, KODE, URAIAN, `PERSENTASE CAPAIAN`, `PERSENTASE REALISASI ANGGARAN`,
-               TARGET, `SATUAN \n TARGET`, CAPAIAN, `SATUAN CAPAIAN`, 
+               TARGET, `SATUAN \n TARGET`, CAPAIAN, `SATUAN CAPAIAN`,
                `PAGU ANGGARAN`, `REALISASI ANGGARAN`, `SISA ANGGARAN`)) %>%
       rename(
         KOMPONEN = KODE
-      )
+      ) %>%
+      arrange(`PERSENTASE CAPAIAN`)
     
-    #orange_pal <- function(x) rgb(colorRamp(c("#ff2c2c", "#caf0f8"))(x), maxColorValue = 255)
-    reactable(
-      tabel_rincian,
-      filterable = TRUE, minRows = 5,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = c(4, 8, 12),
-      defaultPageSize = 4,
-      defaultSorted = list(`PERSENTASE REALISASI ANGGARAN` = "asc", 
-                           `PERSENTASE CAPAIAN` = "asc",
-                           `SISA ANGGARAN` = "asc"),
-      defaultColDef = colDef(
-        header = function(value) gsub(".", " ", value, fixed = T),
-        cell = function(value) format(value, nsmall = 1),
-        align = "center",
-        minWidth = 130,
-        headerStyle = list(background = "#f7f7f8")
-      ),
-      # columns = list(
-      #   URAIAN = colDef(minWidth = 170),
-      #   `PERSENTASE CAPAIAN` = colDef(
-      #     style = function(value) {
-      #       normalized <- (value - min(tabel_rincian$`PERSENTASE CAPAIAN`)) / (max(tabel_rincian$`PERSENTASE CAPAIAN`) - min(tabel_rincian$`PERSENTASE CAPAIAN`))
-      #       color <- orange_pal(normalized)
-      #       list(background = color)
-      #     }
-      #   ),
-      #   `PERSENTASE REALISASI ANGGARAN` = colDef(
-      #     style = function(value) {
-      #       normalized <- (value - min(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`)) / (max(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`) - min(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`))
-      #       color <- orange_pal(normalized)
-      #       list(background = color)
-      #     }
-      #   )
-      # ),
-      bordered = TRUE,
-      highlight = TRUE
+    as.datatable(
+      formattable(tabel_rincian),
+      extensions = 'Buttons',
+      filter = 'top',
+      options = list(
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+        pageLength = 13, autoWidth = TRUE
+      )
     )
+    
   })
-  
-  output$tabel_rekap <- renderReactable({
+
+  output$tabel_rekap <- DT::renderDataTable({
     data_rekapitulasi = data_rekapitulasi %>%
       filter(`KODE TIMKER` %in% nilai_timker())
-    
+
     data_rekapitulasi_timker1 <- data_rekapitulasi %>%
       group_by(`KODE TIMKER`) %>%
       summarise(
@@ -274,55 +250,39 @@ server <- function(input, output) {
         `% ANGGARAN` = round(`REALISASI ANGGARAN`/PAGU, 4) *100
       ) %>%
       arrange(`% CAPAIAN`)
-   # orange_pal <- function(x) rgb(colorRamp(c("#ff2c2c", "#caf0f8"))(x), maxColorValue = 255)
     
     
-    reactable(
-      data_rekapitulasi_timker1,
-      defaultPageSize = 13,
-      bordered = TRUE,
-      highlight = TRUE,
-      columns = list(
-        `KODE TIMKER` = colDef(footer = "Total"),
-        `JUMLAH KOMPONEN` = colDef(footer = function(values) sum(values)),
-        TERCAPAI = colDef(footer = function(values) sum(values)),
-        `BELUM TERCAPAI` = colDef(footer = function(values) sum(values)),
-        `% CAPAIAN` = colDef(
-          # style = function(value) {
-          #   normalized <- (value - min(data_rekapitulasi_timker1$`% CAPAIAN`)) / (max(data_rekapitulasi_timker1$`% CAPAIAN`) - min(data_rekapitulasi_timker1$`% CAPAIAN`))
-          #   color <- orange_pal(normalized)
-          #   list(background = color)
-          # },
-          footer = function(values) round(mean(values),2)
-          ),
-        PAGU = colDef(
-          cell = function(value) {
-            # Render as currency
-            paste0("Rp", format(value, big.mark = ",", scientific = FALSE))
-          },
-          footer = function(values) sum(values)),
-        `REALISASI ANGGARAN` = colDef(
-          cell = function(value) {
-            # Render as currency
-            paste0("Rp", format(value, big.mark = ",", scientific = FALSE))
-          },
-          footer = function(values) sum(values)),
-        SISA = colDef(
-          cell = function(value) {
-            # Render as currency
-            paste0("Rp", format(value, big.mark = ",", scientific = FALSE))
-          },
-          footer = function(values) sum(values)),
-        `% ANGGARAN` = colDef(footer = function(values) round(mean(values),2))
-      ),
-      defaultColDef = colDef(
-        header = function(value) gsub(".", " ", value, fixed = T),
-        cell = function(value) format(value, nsmall = 1),
-        align = "center",
-        minWidth = 150,
-        headerStyle = list(background = "#f7f7f8"),
-        footerStyle = list(fontWeight = "bold"))
-    )
+    # Menghitung rata-rata dari kolom-kolom numerik
+    mean_row <- data_rekapitulasi_timker1 %>%
+      summarise(
+        `JUMLAH KOMPONEN` = length(unique(`JUMLAH KOMPONEN` )),
+        TERCAPAI = sum(TERCAPAI),
+        `BELUM TERCAPAI` = sum(`BELUM TERCAPAI`),
+        `% CAPAIAN` = mean(`% CAPAIAN`),
+        `PAGU` = sum(`PAGU`),
+        `REALISASI ANGGARAN` = sum(`REALISASI ANGGARAN`),
+        SISA = PAGU - `REALISASI ANGGARAN`,
+        `% ANGGARAN` = round(`REALISASI ANGGARAN`/PAGU, 4) *100
+      ) %>%
+      mutate(`KODE TIMKER` = "Total")
+    
+    # Menambah baris rata-rata ke data frame asli
+    data_rekapitulasi_timker1 <- bind_rows(data_rekapitulasi_timker1, mean_row)
+    
+    data_rekapitulasi_timker1 = data_rekapitulasi_timker1 %>%
+      mutate(PAGU = paste0("Rp", comma(PAGU)),
+             `REALISASI ANGGARAN` = paste0("Rp", comma(`REALISASI ANGGARAN`)),
+             SISA = paste0(comma("Rp", SISA)))
+    
+    as.datatable(formattable(data_rekapitulasi_timker1),
+                 extensions = 'Buttons',
+                 options = list(
+                   dom = 'Bfrtip',
+                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                   pageLength = 13, autoWidth = TRUE
+                 )
+              )
+
   })
 }
 
