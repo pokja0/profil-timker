@@ -218,7 +218,7 @@ server <- function(input, output) {
         KOMPONEN = KODE
       )
     
-    orange_pal <- function(x) rgb(colorRamp(c("#ff2c2c", "#caf0f8"))(x), maxColorValue = 255)
+    #orange_pal <- function(x) rgb(colorRamp(c("#ff2c2c", "#caf0f8"))(x), maxColorValue = 255)
     reactable(
       tabel_rincian,
       filterable = TRUE, minRows = 5,
@@ -235,23 +235,23 @@ server <- function(input, output) {
         minWidth = 130,
         headerStyle = list(background = "#f7f7f8")
       ),
-      columns = list(
-        URAIAN = colDef(minWidth = 170),
-        `PERSENTASE CAPAIAN` = colDef(
-          style = function(value) {
-            normalized <- (value - min(tabel_rincian$`PERSENTASE CAPAIAN`)) / (max(tabel_rincian$`PERSENTASE CAPAIAN`) - min(tabel_rincian$`PERSENTASE CAPAIAN`))
-            color <- orange_pal(normalized)
-            list(background = color)
-          }
-        ),
-        `PERSENTASE REALISASI ANGGARAN` = colDef(
-          style = function(value) {
-            normalized <- (value - min(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`)) / (max(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`) - min(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`))
-            color <- orange_pal(normalized)
-            list(background = color)
-          }
-        )
-      ),
+      # columns = list(
+      #   URAIAN = colDef(minWidth = 170),
+      #   `PERSENTASE CAPAIAN` = colDef(
+      #     style = function(value) {
+      #       normalized <- (value - min(tabel_rincian$`PERSENTASE CAPAIAN`)) / (max(tabel_rincian$`PERSENTASE CAPAIAN`) - min(tabel_rincian$`PERSENTASE CAPAIAN`))
+      #       color <- orange_pal(normalized)
+      #       list(background = color)
+      #     }
+      #   ),
+      #   `PERSENTASE REALISASI ANGGARAN` = colDef(
+      #     style = function(value) {
+      #       normalized <- (value - min(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`)) / (max(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`) - min(tabel_rincian$`PERSENTASE REALISASI ANGGARAN`))
+      #       color <- orange_pal(normalized)
+      #       list(background = color)
+      #     }
+      #   )
+      # ),
       bordered = TRUE,
       highlight = TRUE
     )
@@ -274,7 +274,7 @@ server <- function(input, output) {
         `% ANGGARAN` = round(`REALISASI ANGGARAN`/PAGU, 4) *100
       ) %>%
       arrange(`% CAPAIAN`)
-    orange_pal <- function(x) rgb(colorRamp(c("#ff2c2c", "#caf0f8"))(x), maxColorValue = 255)
+   # orange_pal <- function(x) rgb(colorRamp(c("#ff2c2c", "#caf0f8"))(x), maxColorValue = 255)
     
     
     reactable(
@@ -288,11 +288,11 @@ server <- function(input, output) {
         TERCAPAI = colDef(footer = function(values) sum(values)),
         `BELUM TERCAPAI` = colDef(footer = function(values) sum(values)),
         `% CAPAIAN` = colDef(
-          style = function(value) {
-            normalized <- (value - min(data_rekapitulasi_timker1$`% CAPAIAN`)) / (max(data_rekapitulasi_timker1$`% CAPAIAN`) - min(data_rekapitulasi_timker1$`% CAPAIAN`))
-            color <- orange_pal(normalized)
-            list(background = color)
-          },
+          # style = function(value) {
+          #   normalized <- (value - min(data_rekapitulasi_timker1$`% CAPAIAN`)) / (max(data_rekapitulasi_timker1$`% CAPAIAN`) - min(data_rekapitulasi_timker1$`% CAPAIAN`))
+          #   color <- orange_pal(normalized)
+          #   list(background = color)
+          # },
           footer = function(values) round(mean(values),2)
           ),
         PAGU = colDef(
