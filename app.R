@@ -10,47 +10,49 @@ library(scales)
 library(readxl)
 
 
-ui <- page_sidebar(
+ui <- page_fluid(
   title = "Evaluasi Tim Kerja",
-  #autoWaiter(),
-  fillable = F,
-  sidebar = sidebar(
-    width = "20%",
-    uiOutput("filter_timker"),
-    uiOutput("cari"),
-    textOutput("sumber_data")
-  ),
-  tags$div(
-    style = "display: flex; align-items: center; justify-content: center;",
-    tags$img(src = "https://bkkbnsulbar.id/wp-content/uploads/2022/12/cropped-logobkkbnsulbar.png", height = "100px"),
-    tags$h3("Capaian Output dan Anggaran", style = "margin-left: 10px;")
-  ),
-  card(
-    card_header("PERSENTASE OUTPUT & ANGGARAN"),
-    plotlyOutput("sp_output_realisasi")
-  ),
-  layout_column_wrap(
-    card(
-      card_header(
-        "% OUTPUT"
-      ),
-      plotlyOutput("bar_output")
+  layout_sidebar(
+    #autoWaiter(),
+    fillable = F,
+    sidebar = sidebar(
+      width = "20%",
+      uiOutput("filter_timker"),
+      uiOutput("cari"),
+      textOutput("sumber_data")
+    ),
+    tags$div(
+      style = "display: flex; align-items: center; justify-content: center;",
+      tags$img(src = "https://bkkbnsulbar.id/wp-content/uploads/2022/12/cropped-logobkkbnsulbar.png", height = "100px"),
+      tags$h3("Capaian Output dan Anggaran", style = "margin-left: 10px;")
     ),
     card(
-      card_header(
-        "% REALISASI ANGGARAN"
-      ),
-      plotlyOutput("bar_realisasi")
-    )
-  ),
-  navset_card_pill(height = "700px",
-    nav_panel(
-      "TABEL REKAP",
-      DT::DTOutput("tabel_rekap")
+      card_header("PERSENTASE OUTPUT & ANGGARAN"),
+      plotlyOutput("sp_output_realisasi")
     ),
-    nav_panel(
-      "TABEL RINCIAN",
-      DT::DTOutput("tabel_rincian")
+    layout_column_wrap(
+      card(
+        card_header(
+          "% OUTPUT"
+        ),
+        plotlyOutput("bar_output")
+      ),
+      card(
+        card_header(
+          "% REALISASI ANGGARAN"
+        ),
+        plotlyOutput("bar_realisasi")
+      )
+    ),
+    navset_card_pill(height = "700px",
+                     nav_panel(
+                       "TABEL REKAP",
+                       DT::DTOutput("tabel_rekap")
+                     ),
+                     nav_panel(
+                       "TABEL RINCIAN",
+                       DT::DTOutput("tabel_rincian")
+                     )
     )
   )
 )

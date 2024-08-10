@@ -5,7 +5,7 @@ account: arole0-pokja-materi0kaper
 server: posit.cloud
 hostUrl: https://api.posit.cloud/v1
 appId: 8516896
-bundleId: 8963598
+bundleId: 8968351
 url: https://posit.cloud/content/8516896
 version: 1
 asMultiple: FALSE
