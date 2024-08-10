@@ -370,6 +370,21 @@ server <- function(input, output) {
               )
 
   })
+  
+  observeEvent(input$cari, {
+    result <- NULL
+    
+    withProgress(message = 'Menghitung...', value = 0, {
+      # Simulasikan operasi yang memakan waktu
+      for (i in 1:10) {
+        Sys.sleep(1)  # Tunggu 0.5 detik
+        incProgress(1/10)  # Tambahkan progress
+      }
+      result <- "Operasi Selesai"
+    })
+    
+    output$result <- renderText({ result })
+  })
 }
 
 shinyApp(ui, server)
