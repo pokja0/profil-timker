@@ -115,11 +115,9 @@ server <- function(input, output) {
   })
   
   output$cari <- renderUI({
-    actionBttn(
-      inputId = "cari",
-      label = "Cari",
-      style = "jelly", 
-      color = "primary", size = "sm"
+    bslib::input_task_button(
+      id = "cari",
+      label = "Cari"
     )
   })
   
@@ -376,9 +374,9 @@ server <- function(input, output) {
     
     withProgress(message = 'Menghitung...', value = 0, {
       # Simulasikan operasi yang memakan waktu
-      for (i in 1:10) {
+      for (i in 1:2) {
         Sys.sleep(1)  # Tunggu 0.5 detik
-        incProgress(1/10)  # Tambahkan progress
+        incProgress(i/2)  # Tambahkan progress
       }
       result <- "Operasi Selesai"
     })
