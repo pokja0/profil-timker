@@ -1,6 +1,7 @@
 library(plotly)
 library(shinyWidgets)
 library(bslib)
+library(shiny)
 library(waiter)
 library(DT)
 library(formattable)
@@ -18,7 +19,10 @@ ui <- page_fluid(
     sidebar = sidebar(
       width = "20%",
       uiOutput("filter_timker"),
-      uiOutput("cari"),
+      bslib::input_task_button(
+        id = "cari",
+        label = "Cari"
+      ),
       textOutput("sumber_data")
     ),
     tags$div(
@@ -59,8 +63,8 @@ ui <- page_fluid(
 
 
 server <- function(input, output) {
-  #data_rekapitulasi <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1UyGa0LYPKlQFqlWdO6NU0bXOnHWOES6zBrbB8V6ykOk/edit?pli=1&gid=1275478363#gid=1275478363")
-  data_rekapitulasi <- read_excel("data/Capaian Output dan Komponen TA.2024.xlsx")
+  data_rekapitulasi <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1UyGa0LYPKlQFqlWdO6NU0bXOnHWOES6zBrbB8V6ykOk/edit?pli=1&gid=1275478363#gid=1275478363")
+  #data_rekapitulasi <- read_excel("data/Capaian Output dan Komponen TA.2024.xlsx")
   data_rekapitulasi <- tibble(data_rekapitulasi)
   data_rekapitulasi <- data_rekapitulasi %>%
     filter(!is.na(`TIM KERJA`)) %>%
@@ -114,13 +118,6 @@ server <- function(input, output) {
                 options = pickerOptions(actionsBox = TRUE))
   })
   
-  output$cari <- renderUI({
-    bslib::input_task_button(
-      id = "cari",
-      label = "Cari"
-    )
-  })
-  
   output$sumber_data <- renderText({
     req(input$cari)
     print("Data bersumber dari Capaian Output dan Komponen TA.2024 Pada Kolom Rekapitulasi")
@@ -152,10 +149,6 @@ server <- function(input, output) {
                xaxis = list(title = "ANGGARAN"),
                yaxis = list(title = "OUTPUT"))
       
-      for (i in 4:7) {
-        incProgress(4/7)
-        sum(runif(10000000,0,1))
-      }
       
       # Increment the progress bar, and update the detail text.
       incProgress(0.8, detail = paste("Base Plot"))
@@ -181,8 +174,6 @@ server <- function(input, output) {
             )
           )
         )
-      
-      incProgress(0.8)
       
       incProgress(0.9, detail = paste("Base Plot"))
       incProgress(1, detail = paste("Selesai"))
